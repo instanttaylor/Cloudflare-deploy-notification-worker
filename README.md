@@ -26,3 +26,9 @@ A Cloudflare Worker that forwards Cloudflare Pages deployment notifications to [
 ## How it works
 
 Cloudflare fires a webhook to this Worker when a Pages deploy completes. The Worker forwards the notification to your ntfy topic as a push notification.
+
+## Security considerations
+
+- **Webhook authentication**: The Worker URL is publicly accessible. Anyone who discovers it can POST to it and trigger notifications. Consider adding a shared secret (`WEBHOOK_SECRET`) that Cloudflare sends with each webhook request, and validating it in the Worker before forwarding.
+- **Public ntfy topics**: Anyone who knows your ntfy topic name can subscribe and see your deploy notifications. Use a hard-to-guess topic name, or use a self-hosted ntfy instance with access controls.
+- **Rate limiting**: There is no application-level rate limiting. Cloudflare's built-in DDoS protection applies, but a determined spammer could still flood your notifications.
