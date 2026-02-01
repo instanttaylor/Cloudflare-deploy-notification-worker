@@ -18,7 +18,10 @@ export default {
       console.log("No structured data found, sending raw");
       const rawResp = await fetch(`https://ntfy.sh/${topic}`, {
         method: "POST",
-        headers: { "Title": "Deploy Webhook (raw)" },
+        headers: {
+          "Title": "Deploy Webhook (raw)",
+          ...(env.NTFY_TOKEN && { "Authorization": `Bearer ${env.NTFY_TOKEN}` }),
+        },
         body: JSON.stringify(payload, null, 2),
       });
       console.log("ntfy raw response:", rawResp.status, await rawResp.text());
@@ -44,6 +47,7 @@ export default {
       "Title": title,
       "Tags": success ? "white_check_mark" : "x",
       "Click": dashboardUrl,
+      ...(env.NTFY_TOKEN && { "Authorization": `Bearer ${env.NTFY_TOKEN}` }),
     };
 
     if (!success) {

@@ -1,0 +1,10 @@
+{
+  "data": {
+    "project_name": "test",
+    "event": "EVENT_DEPLOYMENT_SUCCESS",
+    "environment": "ENVIRONMENT_PRODUCTION",
+    "commit_hash": "abc1234",
+    "account_tag": "123",
+    "deployment_id": "456"
+  }
+}
