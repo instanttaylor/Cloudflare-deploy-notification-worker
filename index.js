@@ -10,12 +10,47 @@ export default {
     }
 
     const payload = await request.json().catch(() => null);
+    const data = payload?.data;
 
-    // Forward the raw payload until we know the exact Cloudflare field names
+    // Fall back to raw JSON if we can't parse the expected structure
+    if (!data || !data.project_name) {
+      await fetch(`https://ntfy.sh/${topic}`, {
+        method: "POST",
+        headers: { "Title": "Deploy Webhook (raw)" },
+        body: JSON.stringify(payload, null, 2),
+      });
+      return new Response("Notified (raw)", { status: 200 });
+    }
+
+    const success = data.event === "EVENT_DEPLOYMENT_SUCCESS";
+    const env_name = data.environment === "ENVIRONMENT_PRODUCTION" ? "production" : "preview";
+    const shortHash = data.commit_hash ? data.commit_hash.slice(0, 7) : "";
+    const dashboardUrl = `https://dash.cloudflare.com/${data.account_tag}/pages/view/${data.project_name}/${data.deployment_id}`;
+
+    const title = success
+      ? `${data.project_name} deployed to ${env_name}`
+      : `${data.project_name} deploy failed (${env_name})`;
+
+    const bodyLines = [
+      shortHash && `Commit: ${shortHash}`,
+      data.preview_url && `Preview: ${data.preview_url}`,
+      data.pages_dev_url && `Site: ${data.pages_dev_url}`,
+    ].filter(Boolean);
+
+    const headers = {
+      "Title": title,
+      "Tags": success ? "white_check_mark" : "x",
+      "Click": dashboardUrl,
+    };
+
+    if (!success) {
+      headers["Priority"] = "high";
+    }
+
     await fetch(`https://ntfy.sh/${topic}`, {
       method: "POST",
-      headers: { "Title": "Site Deployed" },
-      body: JSON.stringify(payload, null, 2),
+      headers,
+      body: bodyLines.join("\n"),
     });
 
     return new Response("Notified", { status: 200 });
